@@ -1,0 +1,197 @@
+# This program showcases the drone functions
+# Drone stops at a certain temperature, which is entered by the     
+# user, in the air and notifies the altitude to the user, then      
+# returns back to the release point.
+# It is assumed that the drone is durable to low temperatures. It   
+# aims to calculate the change in temperature due to increase in altitude.
+# It outputs and returns the result. 
+func _calculateAvgTempPerAlti(real temp) real {
+
+    int firstAlti = &getAltitude();       # Altitude at the release
+    real firstTemp = &getTemperature();    # Temperature at the release
+    $output("Altitude at the release point is ");
+    $output(firstAlti);
+    $output(",and temperature at the this altitude is ");
+    $output(firstTemp);
+    $output("°\n");
+
+    if (firstTemp > temp) {
+
+        # This loop is for finding which altitude has a certain temperature.
+        while (&getTemperature() > temp) {
+            &climb(UP);
+        }
+
+        int lastAlti = &getAltitude();  # Temperature when temp is 5°                    
+        $output("The drone\'s altitude is");
+        $output(lastAlti);
+        $output(",and temperature at the this altitude is ");
+        $output(temp);
+        if( lastAlti == 0){
+            $output("The drone\'s altitude is");
+            $output(lastAlti);
+            $output(", and it has crashed :(");
+        }
+
+# This block of code is for calculating the average temperature  change due to increase in altitude.
+        int altiDiff = lastAlti - firstAlti;
+        real tempDiff =  temp - firstTemp;
+        real avgChange = tempDiff / altiDiff;
+
+        $output("Temperature drops by ");
+        $output(avgChange);
+        $output(" in average per meter increase in altitude");
+
+
+# This loop is for returning the drone to its release point.
+        while (&getAltitude() > firstAlti) {
+            &climb(DOWN);
+        }
+
+        return avgChange;
+
+    } elseif (firstTemp < temp) {
+        # This loop is for finding which altitude has the certain temperature.
+        while (&getTemperature() > temp) {
+            &climb(DOWN);
+        }
+
+        int lastAlti = &getAltitude();  # Temperature when temp is 5°                    
+        $output("The drone's altitude is");
+        $output(lastAlti);
+        $output(",and temperature at the this altitude is ");
+        $output(temp);
+
+# This block of code is for calculating the average temperature change due to increase in altitude.
+        int altiDiff = lastAlti - firstAlti;
+        real tempDiff =  temp - firstTemp;
+        real avgChange = tempDiff / altiDiff;
+
+        $output("Temperature increases by ");
+        $output(avgChange);
+        $output(" in average per meter decrease in altitude");
+
+# This loop is for returning the drone to its release point.
+        while (&getAltitude() > firstAlti) {
+            &climb(UP);
+        }
+
+        return avgChange;
+
+    } else { 
+        $output("Average cannot be calculated because the drone is already in this temperature.");
+        return 0;
+    }
+
+}
+
+
+# This function makes the drone move in given parameters. It is     
+# assumed that in every iteration in the loop it takes a second.
+func _turnAndClimb(int degrees, int metersVert, int metersHor) {
+
+# This block of code makes sure that the drone is not moving.
+    &climb(STOP);
+    &move(STOP);
+    
+    drone_enum turnDir;
+    drone_enum climbDir;
+    drone_enum moveDir;
+
+    int turnDegree = degrees;
+    int movementVert = metersVert;
+    int movementHor = metersHor;
+
+# This block of code makes the drone rotate in the wanted direction # and degree.
+    if (degrees > 0) {
+        turnDir = LEFT;
+    } elseif (degrees < 0) {
+        turnDir = RIGHT;
+        turnDegree = 0 - degrees;
+    }
+    
+    if (degrees =/= 0) {
+        for (i = 0; i < turnDegree; i = i + 1) {
+            &turn(turnDir);
+        }
+    }
+
+# This block of code makes the drone go up and down in the wanted   # direction and meters.
+    if (metersVert > 0) {
+        climbDir = UP;
+    } elseif (metersVert < 0) {
+        climbDir = DOWN;
+        movementVert = 0 - metersVert;
+    }
+    if (metersVert =/= 0) {
+        for (i = 0; i < movementVert / 10; i = i + 1) {
+            &climb(climbDir);
+        }
+    }
+    &climb(STOP);
+
+# This block of code makes the drone go forward and backward in the  # wanted direction and meters.
+    if (metersHor > 0) {
+        moveDir = FORWARD;
+    } elseif (metersHor < 0) {
+        moveDir = BACKWARD;
+        movementHor = 0 - metersHor;
+    }
+    if (metersHor =/= 0) {
+        for (i = 0; i < movementHor; i = i + 1) {
+            &move(moveDir);
+        }
+    }
+    &move(STOP);
+}
+
+    
+func _sprayAutomatically(int numberOfRows, int rowLength, int metersBetweenRows, drone_enum firstTurn) {
+    int curTurns = 0;
+    bool turn = true;
+
+    &toggleSpray(ON);
+
+    while (curTurns < numberOfTurns) {
+        
+        for (int i = 0; i < rowLength; i = i + 1) {
+            &move(FORWARD);
+        }
+        &move(STOP);
+
+        for (int i = 0; i < 90; i = i + 1) {
+            if (turn) {
+                &turn(RIGHT);
+			}
+            else {
+                &turn(LEFT);
+			}
+        }
+
+        for (int i = 0; i < metersBetweenRows; i = i + 1) {
+            &move(FORWARD);
+        }
+        &move(STOP);
+
+        for (int i = 0; i < 90; i = i + 1) {
+            if (turn) {
+                &turn(RIGHT);
+			}
+            else {
+                &turn(LEFT);
+			}
+        }
+
+        turn = not turn;
+        curTurns = curTurns + 1;
+
+    }
+    &toggleSpray(OFF);
+}
+main () {
+
+    &connectTo(162.236.48.2);
+    _calculateAvgTemp(10);
+    _turnAndClimb(-10, 90, 100);
+    _sprayAutomatically(9, 160, 5, RIGHT);
+}

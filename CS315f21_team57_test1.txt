@@ -1,0 +1,80 @@
+# turns left in the amount of degrees specified (if negative turns right)
+func _turn(int deg)
+{
+	drone_enum turnDir;
+	if (deg > 0)
+	{
+		turnDir = LEFT;
+	}
+	elseif (deg < 0)
+	{
+		turnDir = RIGHT;
+		deg = -1 * deg;
+	}
+	
+	for (int i = 0; i < deg; i = i + 1)
+	{
+		&turn(turnDir);
+	}
+}
+
+# function for drone to spray a rectangular area, assumes that drone is located right on the left bottom corner and facing north. Left bottom corner of rectangle is (0,0)
+
+func _sprayRect( int length, int width)
+{
+	&connectTo(197.6.0.200);
+
+	real firstAlti = &getAltitude();            # Altitude at the release
+	real cruiseAlti = firstAlti + 5;
+	real areaGoal = length * width;      		# Area to be covered 
+    real areaDone = 0;							# Area covered
+    int curX = 0;
+    int curY = 0;
+
+    $output("Area to be covered is ");
+    $output(areaGoal);
+
+    while( firstAlti <= cruiseAlti){
+    	&climb(UP);
+    }
+    
+
+    for( int i = 1; i < width; i = i + 2){
+    	while(curX <= length){
+    	&toggleSpray(ON);
+    	&move(FORWARD);
+	    }
+	    areaDone = areaDone + length;
+	    $output("Area Covered is: ");
+	    $output(areaDone);
+	    &toggleSpray(OFF);
+	    _turn(-90);
+	    while(width - curY <= width - i){
+	    	&toggleSpray(ON);
+	    	&move(FORWARD);
+	    }
+	    _turn(-90);
+	    &toggleSpray(OFF);
+	    while(curX >= 0){
+	    	&toggleSpray(ON);
+	    	&move(FORWARD);
+	    }
+	    areaDone = areaDone + length;
+	    $output("Area Covered is: ");
+	    $output(areaDone);
+	    _turn(90);
+	    &toggleSpray(OFF);
+	    while(width - curY <= width - (i + 1) ){
+	    	&toggleSpray(ON);
+	    	&move(FORWARD);
+    	}
+    	_turn(90);
+    }
+}
+
+main(){
+	length = 10;
+	width = 5;
+	_sprayRect( length, width);
+}
+

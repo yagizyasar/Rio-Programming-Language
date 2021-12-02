@@ -1,0 +1,85 @@
+# recursive function to calculate fibonacci series
+func _fibonacci(int n) int
+{
+	if ((n == 0) or (n == 1))
+	{
+		return 1;
+	}
+	else
+	{
+		return (_fibonacci(n - 2) + _fibonacci(n - 1));
+	}
+}
+
+func _empty()
+{
+	#empty func
+}
+
+# turns left in the amount of degrees specified (if negative turns right)
+func _turn(int deg)
+{
+	drone_enum turnDir;
+	if (deg > 0)
+	{
+		turnDir = LEFT;
+	}
+	elseif (deg < 0)
+	{
+		turnDir = RIGHT;
+		deg = -1 * deg;
+	}
+	
+	for (int i = 0; i < deg; i = i + 1)
+	{
+		&turn(turnDir);
+	}
+}
+
+# this program makes the drone make a fibonacci spiral, and while it's moving along north-south it sprays as well
+main()
+{
+	
+	_empty();
+
+	int spiralEdges = 10;
+	
+	for (int i = 0; i < spiralEdges; i = i + 1)
+	{
+		int start = &getTime();
+		int edgeLength = _fibonacci(i);
+		
+		string direction;
+		if (&getHeading() == 0)
+		{
+			direction = "east asda";
+			&toggleSpray(OFF);
+		}
+		elseif (&getHeading() == 90)
+		{
+			direction = "north\n";
+			&toggleSpray(ON);
+		}
+		elseif (&getHeading() == 180)
+		{
+			direction = "west ";
+			&toggleSpray(OFF);
+		}
+		else
+		{
+			direction = " south";
+			&toggleSpray(ON);
+		}
+		
+		while ((&getTime() - start) < edgeLength)
+		{
+			$output("moved 1 meter to");
+			$output(direction);
+			$output("\n");
+		}
+		
+		_turn(90);
+	}
+	
+	$output("done\n");
+}
